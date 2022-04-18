@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <title>CSE6242 Team 141 Project</title>
+    
+    <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-dsv.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-geo-projection.v2.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-legend.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-tip.min.js"></script>
+    <script type="text/javascript" src="../lib/topojson.v2.min.js"></script>
+    <link rel="stylesheet" href="visualization.css">
+
+    <title>CSE6242 Team 141 Project</title>
+
+</head>
+<body>
+    <span class="factor-response">Response:</span> <div class="selector">
+        <div class="dropdown-button"><span id="dropdown-label1">Cancer</span>
+        <div class="dropdown-options" id="dropdown1">
+        </div>
+      </div>
+    </div>
+    <br>
+    <svg id="choropleth"></svg>
+    <script>
+        const parameters = ['Arthritis', 'Asthma', 'Binge drinking', 'COPD', 'Cancer', 'Cervical cancer screenings', 'Cholesterol screenings', 'Chronic kidney disease',
+                            'Colon cancer screenings', 'Core men\'s health', "Core women's health", 'Coronary heart disease', 'Dental checkups', 'Depression', 'Diabetes',
+                            'General poor health', 'Health insurance access', 'High blood pressure', 'High cholesterol', 'Mammograms', 'Medium blood pressure',
+                            'No physical activity', 'Obesity', 'Poor mental health', 'Poor physical health', 'Poor sleep', 'Routine checkups', 'Smoking', 'Stroke',
+                            'Teeth loss']
+        parameters.forEach(element => {
+            var a = document.createElement("span");
+            a.innerHTML = element;
+            a.setAttribute("onClick", "updateResponse(\"" + element + "\")")
+            document.getElementById('dropdown1').appendChild(a);
+        });
+        const parameter_mapping = {"access2": "Health insurance access", "arthritis": "Arthritis", "binge": "Binge drinking",
+                                    "bphigh": "High blood pressure", "bpmed": "Medium blood pressure", "cancer": "Cancer",
+                                    "casthma": "Asthma", "cervical": "Cervical cancer screenings", "chd": "Coronary heart disease",
+                                    "checkup": "Routine checkups", "cholscreen": "Cholesterol screenings", "colon_screen": "Colon cancer screenings",
+                                    "copd": "COPD", "corem": "Core men\"s health", "corew": "Core women's health", "csmoking": "Smoking",
+                                    "dental": "Dental checkups", "depression": "Depression", "diabetes": "Diabetes", "ghlth": "General poor health",
+                                    "highchol": "High cholesterol", "kidney": "Chronic kidney disease", "lpa": "No physical activity", "mammouse": "Mammograms",
+                                    "mhlth": "Poor mental health", "obesity": "Obesity", "phlth": "Poor physical health", "sleep": "Poor sleep",
+                                    "stroke": "Stroke", "teethlost": "Teeth loss"}
+        const parameter_mapping_r = {'Health insurance access': 'access2', 'Arthritis': 'arthritis', 'Binge drinking': 'binge', 'High blood pressure': 'bphigh',
+                                    'Medium blood pressure': 'bpmed', 'Cancer': 'cancer', 'Asthma': 'casthma', 'Cervical cancer screenings': 'cervical',
+                                    'Coronary heart disease': 'chd', 'Routine checkups': 'checkup', 'Cholesterol screenings': 'cholscreen',
+                                    'Colon cancer screenings': 'colon_screen', 'COPD': 'copd', 'Core men"s health': 'corem', "Core women's health": 'corew',
+                                    'Smoking': 'csmoking', 'Dental checkups': 'dental', 'Depression': 'depression', 'Diabetes': 'diabetes',
+                                    'General poor health': 'ghlth', 'High cholesterol': 'highchol', 'Chronic kidney disease': 'kidney', 'No physical activity': 'lpa',
+                                    'Mammograms': 'mammouse', 'Poor mental health': 'mhlth', 'Obesity': 'obesity', 'Poor physical health': 'phlth',
+                                    'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'}
+        
+        function updateResponse(resp){
+            document.getElementById("dropdown-label1").innerHTML = resp;
+            createMap(data);
+        }
+
+        // See https://bl.ocks.org/gordlea/27370d1eea8464b04538e6d8ced39e89
+        var margin = {top: 20, right: 20, bottom: 70, left: 20}
+            , width = window.innerWidth - margin.left - margin.right    // Use the window's width
+            , height = window.innerHeight - margin.top - margin.bottom; // Use the window's height
+        
+        // Set up the SVG
+        var svg = d3.select("#choropleth")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        var tracts = svg.append("g")
+                        .attr("id", "tracts");
+        
+        // enter code to create color scale
+        // See https://github.com/d3/d3-scale/blob/main/README.md#quantile-scales and https://bl.ocks.org/adamjanes/6cf85a4fd79e122695ebde7d41fe327f
+        var colorScale = d3.scaleLinear().range(["darkblue", "red"]);
+        
+        // enter code to define tooltip
+        // See https://github.com/Caged/d3-tip
+        var tip = d3.tip()
+                    .attr('id', 'tooltip')
+                    .style("opacity", "50%")
+                    .html(function(d){
+                        k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
+                        if (d.properties[k] == null){
+                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i>";
+                        }
+                        else{
+                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: " + d.properties[k];
+                        }
+                        return d.properties[k];
+                    });
+        
+        var projection = d3.geoAlbersUsa();
+        var path = d3.geoPath(projection);
+        var data = undefined;
+
+        // define any other global variables 
+        // var legend_g = svg.append("g")
+        //                 .attr("id", "legend")
+        //                 .attr("transform", "translate(900, 0)")
+        //                 .style("font-family", "sans-serif")
+        // See https://github.com/susielu/d3-legend
+        // var legend = d3.legendColor()
+        //     .labelFormat(d3.format(".2f"))
+
+        d3.json("tracts_data.json").then(function(d){
+                projection.fitExtent([[0, 0], [width, height]], d);
+                data = d;
+                createMap(d);
+            }
+        );
+
+        function createMap(d){
+            d3.selectAll(".mapPath").remove();
+            k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
+            colorScale.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort(), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort(), 0.9)]);
+            tracts.call(tip);
+            tracts.selectAll("path")
+                .data(d.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "mapPath")
+                .style("fill", function(d){
+                    if (d.properties[k] == null){
+                        return "gray";
+                    }
+                    else{
+                        return colorScale(d.properties[k]);
+                    }
+                })
+                .on('mousemove', function(d){
+                    // See https://stackoverflow.com/a/56981996
+                    tip.style('top', d3.event.pageY - 50 + 'px')
+                    .style('left', d3.event.pageX - 100 + 'px')
+                })
+                .on('mouseover', function(d, i){
+                    tip.show(d, i);
+                    tip.style("background", "rgba(75, 75, 75, 0.8)")
+                })
+                .on('mouseout', tip.hide);
+        }
+
+        var zoom = d3.zoom()
+            .scaleExtent([1, 8])
+            .on('zoom', function() {
+                svg.selectAll('g')
+                .attr('transform', d3.event.transform);
+        });
+
+        svg.call(zoom);
+        
+        // this function should be called once the data from files have been read
+        // world: topojson from world_countries.json
+        // gameData: data from ratings-by-country.csv
+        
+        // function ready(error, world, gameData) {
+        //     svg.append("text")
+        //        .text("wwatson43")
+        //        .attr("y", height-40)
+        //        .attr("x", width/2.5)
+        //        .style("font-family", "sans-serif")
+        //     // enter code to extract all unique games from gameData
+        //     games = new Set();
+        //     gameData.forEach(g => games.add(g.Game));
+        //     games = Array.from(games).sort();
+
+        //     // enter code to append the game options to the dropdown
+        //     d3.select("#gameDropdown")
+        //       .selectAll("option")
+        //       .data(games)
+        //       .enter()
+        //       .append("option")
+        //       .text(g => g)
+        //       .attr("value", g => g);
+            
+        //     // event listener for the dropdown. Update choropleth and legend when selection changes. Call createMapAndLegend() with required arguments.
+        //     d3.select("#gameDropdown")
+        //       .on("change", function(d){
+        //           createMapAndLegend(world, gameData, d3.select(this).property("value"));
+        //       });
+
+        //     // create Choropleth with default option. Call createMapAndLegend() with required arguments.
+        //     //var topo = topojson.feature(world, "FeatureCollection");    // See https://github.com/topojson/topojson-client/blob/master/README.md#feature
+        //     createMapAndLegend(world, gameData, games[0]);
+        // }
+
+        // // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
+        // // also use this function to update Choropleth and legend when a different game is selected from the dropdown
+        // function createMapAndLegend(world, gameData, selectedGame){
+        //     d3.selectAll(".mapPath").remove();
+        //     selectedData = gameData.filter(d => d.Game == selectedGame);
+        //     colorScale.domain(selectedData.map(d => d["Average Rating"]).sort((a, b) => a - b));
+        //     // See https://learning.oreilly.com/library/view/interactive-data-visualization/9781491921296/ch14.html
+        //     legend.scale(colorScale);
+        //     legend_g.call(legend);
+        //     countries.call(tip);
+        //     countries.selectAll("path")
+        //              .data(world.features)
+        //              .enter()
+        //              .append("path")
+        //              .attr("d", path)
+        //              .attr("class", "mapPath")
+        //              .style("fill", function(d){
+        //                  values = d.properties[selectedGame];
+        //                  if (values){
+        //                     return colorScale(values.avg);
+        //                  }
+        //                  else{
+        //                     return "gray";
+        //                  }
+        //              })
+        //              .on('mousemove', function(d){
+        //                  // See https://stackoverflow.com/a/56981996
+        //                  tip.style('top', d3.event.pageY - 90 + 'px')
+        //                     .style('left', d3.event.pageX - 50 + 'px')
+        //              })
+        //              .on('mouseover', function(d, i){
+        //                  tip.show(d, i);
+        //                  tip.style("background", "rgba(75, 75, 75, 0.8)")
+        //              })
+        //              .on('mouseout', tip.hide);
+            
+        // }
+    </script>
+</body>
+</html>

@@ -15,6 +15,19 @@
 
 </head>
 <body>
+    <span class="factor-response">City:</span> <div class="selector">
+        <div class="dropdown-button"><span id="dropdown-label4">New York</span>
+        <div class="dropdown-options" id="dropdown4">
+            <span onclick="updateCity('Atlanta')">Atlanta</span>
+            <span onclick="updateCity('Cincinnati')">Cincinnati</span>
+            <span onclick="updateCity('Houston')">Houston</span>
+            <span onclick="updateCity('New_York')">New York</span>
+            <span onclick="updateCity('San_Francisco')">San Francisco</span>
+            <span onclick="updateCity('Seattle')">Seattle</span>
+        </div>
+      </div>
+    </div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
     <span class="factor-response">Desert 1:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label2">Food</span>
         <div class="dropdown-options" id="dropdown2">
@@ -26,7 +39,7 @@
         </div>
       </div>
     </div>
-    &nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;
     <span class="factor-response">Desert 2:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label3">Physical activity</span>
         <div class="dropdown-options" id="dropdown3">
@@ -38,14 +51,13 @@
         </div>
       </div>
     </div>
-    <span style="float: right; padding-right: 15%">
+    &nbsp;&nbsp;&nbsp;&nbsp;
     <span class="factor-response">Response:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label1">Cancer</span>
         <div class="dropdown-options" id="dropdown1">
         </div>
       </div>
     </div>
-    </span>
     <br>
     <svg id="deserts" style="z-index: 2"></svg>
     <svg id="choropleth" style="z-index: 2"></svg>
@@ -81,8 +93,8 @@
                                     'General poor health': 'ghlth', 'High cholesterol': 'highchol', 'Chronic kidney disease': 'kidney', 'No physical activity': 'lpa',
                                     'Mammograms': 'mammouse', 'Poor mental health': 'mhlth', 'Obesity': 'obesity', 'Poor physical health': 'phlth',
                                     'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'}
-        const factor_mapping_r = {'Food': 'closest_food_nodes_travel_time', 'Physical activity': 'physical_dist', 'Public transport': 'transport_dist',
-                                  'Education': 'closest_education_nodes_travel_time', 'House of worship': 'closest_worship_nodes_travel_time'}
+        const factor_mapping_r = {'Food': 'food_closest_travel_times', 'Physical activity': 'physical_closest_dist', 'Public transport': 'transport_closest_dist',
+                                  'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times'}
         
         function updateResponse(resp){
             document.getElementById("dropdown-label1").innerHTML = resp;
@@ -124,13 +136,13 @@
         var x_axis_position = scatter_height-margin.top-10;
         var scatter_position_x = margin.left*2;
         var scatter_position_y = -margin.top - 10;
-        var scatter1_g = scatter1.append("g").attr("id", "scatter1_g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
+        var scatter1_g = scatter1.append("g").attr("id", "scatter1_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-20) + ")");
         var scatter1_xAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
         var scatter1_yAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
         var scatter2 = d3.select("#scatter2")
                          .attr("width", width)
                          .attr("height", scatter_height);
-        var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
+        var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-20) + ")");
         var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
         var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
 
@@ -161,9 +173,9 @@
                         m = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
                         n = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                         var suffix_1 = ((document.getElementById("dropdown-label2").innerHTML == "Physical activity") || (document.getElementById("dropdown-label2").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_1 = (suffix_1 == " distance") ? " km" : " min";
+                        var units_1 = (suffix_1 == " distance") ? " km" : " s";
                         var suffix_2 = ((document.getElementById("dropdown-label3").innerHTML == "Physical activity") || (document.getElementById("dropdown-label3").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_2 = (suffix_2 == " distance") ? " km" : " min";
+                        var units_2 = (suffix_2 == " distance") ? " km" : " s";
                         if (d.properties[k] == null){
                             return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
                         }
@@ -181,9 +193,9 @@
                         m = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
                         n = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                         var suffix_1 = ((document.getElementById("dropdown-label2").innerHTML == "Physical activity") || (document.getElementById("dropdown-label2").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_1 = (suffix_1 == " distance") ? " km" : " min"
+                        var units_1 = (suffix_1 == " distance") ? " km" : " s"
                         var suffix_2 = ((document.getElementById("dropdown-label3").innerHTML == "Physical activity") || (document.getElementById("dropdown-label3").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_2 = (suffix_2 == " distance") ? " km" : " min"
+                        var units_2 = (suffix_2 == " distance") ? " km" : " s"
                         if (d.properties[k] == null){
                             return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
                         }
@@ -198,13 +210,16 @@
         var path = d3.geoPath(projection);
         var data = undefined;
 
-        // Load the data
-        d3.json("tracts_data.json").then(function(d){
-                projection.fitExtent([[0, 0], [width, height]], d);
-                data = d;
-                createMap(d);
-            }
-        );
+        function updateCity(city){
+            // Load the data
+            document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ")
+            d3.json("tracts_" + city + ".json").then(function(d){
+                    projection.fitExtent([[0, 0], [width, height]], d);
+                    data = d;
+                    createMap(d);
+                }
+            );
+        }
 
         function createMap(d){
             // Create the map
@@ -338,7 +353,7 @@
                                 .attr("y", 110)
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.min(d['features'].map(dd => dd.properties[k])).toFixed(2))
+                                .text(d3.min(d['features'].map(function(dd){ console.log(k); console.log(dd.properties[k]); return dd.properties[k] })).toFixed(2))
                                 .attr("x", 30)
                                 .attr("y", 95)
                                 .style("font-size", 12)
@@ -584,6 +599,7 @@
 
         svg.call(zoom);
         deserts.call(zoom);
+        updateCity("New_York");
     </script>
 </body>
 </html>

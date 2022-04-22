@@ -147,11 +147,11 @@
         var svg = d3.select("#choropleth")
                     .attr("width", width)
                     .attr("height", height)
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    .attr("transform", "translate(" + margin.left + "," + (margin.top - 15) + ")");
         var deserts = d3.select("#deserts")
                     .attr("width", width)
                     .attr("height", height)
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    .attr("transform", "translate(" + margin.left + "," + (margin.top - 15) + ")");
         var tracts = svg.append("g")
                         .attr("id", "tracts");
         var desert_tracts = deserts.append("g")
@@ -162,13 +162,13 @@
         var x_axis_position = scatter_height-margin.top-10;
         var scatter_position_x = margin.left*2;
         var scatter_position_y = -margin.top - 10;
-        var scatter1_g = scatter1.append("g").attr("id", "scatter1_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-20) + ")");
+        var scatter1_g = scatter1.append("g").attr("id", "scatter1_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
         var scatter1_xAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
         var scatter1_yAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
         var scatter2 = d3.select("#scatter2")
                          .attr("width", width)
                          .attr("height", scatter_height);
-        var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-20) + ")");
+        var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
         var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
         var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
 
@@ -341,7 +341,9 @@
             
                 // Factor code
                 k = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
+                factor_k = k;
                 m = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
+                factor_m = m;
                 desert_colorScale1.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.9)]);
                 desert_colorScale2.domain([d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.9)]);
                 deserts.call(desert_tip);
@@ -358,6 +360,118 @@
                                 .attr("width", 23)
                                 .attr("height", 23)
                                 .attr("fill", dd => d3.interpolate(desert_colorScale1(cuts1[dd[0]]), desert_colorScale2(cuts2[dd[1]]))(0.5));
+                                /*.on("mouseover", function(dd){
+                                    let new_color = d3.color(this.getAttribute("fill"));
+                                    new_color.opacity = 0.5;
+                                    d3.select(this).attr("fill", new_color);
+                                    census_ids = [];
+                                    if ((dd[0] == 0) && (dd[1] == 0)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] <= cuts2[1])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 0) && (dd[1] == 1)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 0) && (dd[1] == 2)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] >= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 1) && (dd[1] == 0)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] <= cuts2[1])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 1) && (dd[1] == 1)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 1) && (dd[1] == 2)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] >= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 2) && (dd[1] == 0)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] <= cuts2[1])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 2) && (dd[1] == 1)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    else if ((dd[0] == 2) && (dd[1] == 2)){
+                                        for (let f of data['features']){
+                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] >= cuts2[2])){
+                                                census_ids.push(f.properties['id']);
+                                            }
+                                        }
+                                    }
+                                    census_ids.forEach(function(census_id){
+                                        for (let x of document.getElementById("tracts").children){
+                                            if (x.getAttribute("census_id") == census_id){
+                                                d3.select(x).style("stroke", "black").style("stroke-width", 3);
+                                                break;
+                                            }
+                                        }
+                                        for (let x of document.getElementById("desert_tracts").children){
+                                            if (x.getAttribute("census_id") == census_id){
+                                                d3.select(x).style("stroke", "black").style("stroke-width", 3);
+                                                break;
+                                            }
+                                        }
+                                        for (let x of document.getElementById("scatter1_g").children){
+                                            if (x.getAttribute("census_id") == census_id){
+                                                d3.select(x).attr("r", 4).style("fill", "red");
+                                                break;
+                                            }
+                                        }
+                                        for (let x of document.getElementById("scatter2_g").children){
+                                            if (x.getAttribute("census_id") == census_id){
+                                                d3.select(x).attr("r", 4).style("fill", "red");
+                                                break;
+                                            }
+                                        }
+                                    });
+                                })
+                                .on("mouseout", function(dd){
+                                    let new_color = d3.color(this.getAttribute("fill"));
+                                    new_color.opacity = 1;
+                                    d3.select(this).attr("fill", new_color);
+                                    for (let x of document.getElementById("tracts").children){
+                                        d3.select(x).style("stroke", "none");
+                                    }
+                                    for (let x of document.getElementById("desert_tracts").children){
+                                        d3.select(x).style("stroke", "none");
+                                    }
+                                    for (let x of document.getElementById("scatter1_g").children){
+                                        d3.select(x).attr("r", 1.5).style("fill", "black");
+                                    }
+                                    for (let x of document.getElementById("scatter2_g").children){
+                                        d3.select(x).attr("r", 1.5).style("fill", "black");
+                                    }
+                                });*/
                 desert_legend_g.append("text")
                                 .text(document.getElementById("dropdown-label3").innerHTML)
                                 .attr("x", -90 + (document.getElementById("dropdown-label3").innerHTML == "Food" ? 25 : (document.getElementById("dropdown-label3").innerHTML == "Education") ? 10 : 0))
@@ -408,8 +522,7 @@
                        .on('mousemove', function(dd){
                             // See https://stackoverflow.com/a/56981996
                             desert_tip.style('top', d3.event.pageY - 100 + 'px')
-                            .style('left', d3.event.pageX - 100 + 'px');
-                            
+                                      .style('left', d3.event.pageX - 100 + 'px');
                         })
                         .on('mouseover', function(dd, i){
                             desert_tip.show(dd, i);

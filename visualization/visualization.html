@@ -51,13 +51,21 @@
         </div>
       </div>
     </div>
-    &nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;
     <span class="factor-response">Response:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label1">Cancer</span>
         <div class="dropdown-options" id="dropdown1">
         </div>
       </div>
     </div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <span class="switch-label" id="tract-label" onclick="changeTract()">Census tracts</span>
+    <label class="switch">
+        <input type="checkbox" id="zip-tract-checkbox" onclick="changeTract()">
+        <span class="slider"></span>
+    </label>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <span class="switch-label" style="color: lightgray" id="zip-label" onclick="changeTract()">ZIP codes</span>
     <br>
     <svg id="deserts" style="z-index: 2"></svg>
     <svg id="choropleth" style="z-index: 2"></svg>
@@ -95,7 +103,9 @@
                                     'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'}
         const factor_mapping_r = {'Food': 'food_closest_travel_times', 'Physical activity': 'physical_closest_dist', 'Public transport': 'transport_closest_dist',
                                   'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times'}
-        
+        var current_tract = "tracts_";
+        var current_city = "New_York";
+
         function updateResponse(resp){
             document.getElementById("dropdown-label1").innerHTML = resp;
             createMap(data);
@@ -109,6 +119,22 @@
         function updateDesert2(desert){
             document.getElementById("dropdown-label3").innerHTML = desert;
             createMap(data);
+        }
+        
+        function changeTract(){
+            if (current_tract == "tracts_"){
+                current_tract = "ZCTA_";
+                document.getElementById("zip-label").style = "color: black";
+                document.getElementById("tract-label").style = "color: lightgray";
+                document.getElementById("zip-tract-checkbox").checked = true;
+            }
+            else{
+                current_tract = "tracts_";
+                document.getElementById("zip-label").style = "color: lightgray";
+                document.getElementById("tract-label").style = "color: black";
+                document.getElementById("zip-tract-checkbox").checked = false;
+            }
+            updateCity(current_city);
         }
 
         // See https://bl.ocks.org/gordlea/27370d1eea8464b04538e6d8ced39e89
@@ -147,7 +173,7 @@
         var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
 
         // Prepare the color scales
-        var colorScale = d3.scaleSequential(d3.interpolateRdBu);
+        var colorScale = d3.scaleSequential(d3.interpolateReds);
         var desert_colorScale1 = d3.scaleSequential(d3.interpolatePuBuGn);
         var desert_colorScale2 = d3.scaleSequential(d3.interpolateYlOrRd);
         var scatter1_x = d3.scaleLinear().range([0, width-margin.left]);
@@ -212,8 +238,9 @@
 
         function updateCity(city){
             // Load the data
+            current_city = city;
             document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ")
-            d3.json("tracts_" + city + ".json").then(function(d){
+            d3.json(current_tract + city + ".json").then(function(d){
                     projection.fitExtent([[0, 0], [width, height]], d);
                     data = d;
                     createMap(d);
@@ -225,18 +252,18 @@
             // Create the map
             d3.selectAll(".mapPath").remove();
             k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
-            colorScale.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.9), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.1)]);
+            colorScale.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
             i = 0;
             var legend = d3.legendColor()
                                         .scale(colorScale)
-                                        .ascending(true)
+                                        .ascending(false)
                                         .cells(5)
                                         .labels(function (dd){
                                             if (i === 0){
-                                                return "> " + dd.generatedLabels[i++] + "%";
+                                                return "< " + dd.generatedLabels[i++] + "%";
                                             }
                                             else if (i === dd.generatedLabels.length-1){
-                                                return "< " + dd.generatedLabels[i++] + "%";
+                                                return "> " + dd.generatedLabels[i++] + "%";
                                             }
                                             else{
                                                 return dd.generatedLabels[i++] + "%";
@@ -353,7 +380,7 @@
                                 .attr("y", 110)
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.min(d['features'].map(function(dd){ console.log(k); console.log(dd.properties[k]); return dd.properties[k] })).toFixed(2))
+                                .text(d3.min(d['features'].map(dd => dd.properties[k])).toFixed(2))
                                 .attr("x", 30)
                                 .attr("y", 95)
                                 .style("font-size", 12)

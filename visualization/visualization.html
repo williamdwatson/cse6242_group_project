@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../lib/d3-geo-projection.v2.min.js"></script>
     <script type="text/javascript" src="../lib/d3-legend.min.js"></script>
     <script type="text/javascript" src="../lib/d3-tip.min.js"></script>
-    <script type="text/javascript" src="../lib/topojson.v2.min.js"></script>
     <script type="text/javascript" src="../lib/simple-statistics.min.js"></script>
     <link rel="stylesheet" href="visualization.css">
 
@@ -99,17 +98,26 @@
                          .attr("width", width)
                          .attr("height", scatter_height);
         var x_axis_position = scatter_height-margin.top-10;
-        var scatter_position_x = margin.left*2;
+        var scatter_position_x = margin.left + margin.right;
         var scatter_position_y = -margin.top - 10;
-        var scatter1_g = scatter1.append("g").attr("id", "scatter1_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
-        var scatter1_xAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
-        var scatter1_yAxis = scatter1.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
+        var scatter1_g_width = width - scatter_position_x;
+        var scatter1_g = scatter1.append("g")
+                                 .attr("id", "scatter1_g")
+                                 .attr("width", scatter1_g_width)
+                                 .attr("height", scatter_height + scatter_position_y)
+                                 .attr("transform", "translate(" + scatter_position_x + ", 0)");
+        var scatter1_xAxis = scatter1.append("g").attr("transform", "translate(" + (scatter_position_x - 2) + "," + x_axis_position + ")");
+        var scatter1_yAxis = scatter1.append("g").attr("transform", "translate(" + (scatter_position_x - 2) + ", 0)");
         var scatter2 = d3.select("#scatter2")
                          .attr("width", width)
                          .attr("height", scatter_height);
-        var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
-        var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + (x_axis_position) + ")");
-        var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
+        var scatter2_g = scatter2.append("g")
+                                 .attr("id", "scatter2_g")
+                                 .attr("width", scatter1_g_width)
+                                 .attr("height", scatter_height + scatter_position_y)
+                                 .attr("transform", "translate(" + scatter_position_x + ", 0)");
+        var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + (scatter_position_x - 2) + "," + x_axis_position + ")");
+        var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + (scatter_position_x - 2) + ", 0)");
 
         // Convenient mappings to and from different names (i.e. the nice ones and ones that are actually in the data)
         const parameters = ['Arthritis', 'Asthma', 'Binge drinking', 'COPD', 'Cancer', 'Cervical cancer screenings', 'Cholesterol screenings', 'Chronic kidney disease',
@@ -159,10 +167,10 @@
         var colorScale = d3.scaleSequential(d3.interpolateReds);
         var desert_colorScale1 = d3.scaleSequential(d3.interpolatePuBuGn);
         var desert_colorScale2 = d3.scaleSequential(d3.interpolateYlOrRd);
-        var scatter1_x = d3.scaleLinear().range([0, width-margin.left]);
-        var scatter1_y = d3.scaleLinear().range([scatter_height, 0]);
-        var scatter2_x = d3.scaleLinear().range([0, width-margin.left]);
-        var scatter2_y = d3.scaleLinear().range([scatter_height, 0]);
+        var scatter1_x = d3.scaleLinear().range([0, scatter1_g_width]);
+        var scatter1_y = d3.scaleLinear().range([scatter_height + scatter_position_y, 0]);
+        var scatter2_x = d3.scaleLinear().range([0, width-margin.left-margin.right]);
+        var scatter2_y = d3.scaleLinear().range([scatter_height + scatter_position_y, 0]);
 
         var legend_g = svg.append("g")
                         .attr("id", "legend")
@@ -417,7 +425,7 @@
                     y: regression_line2(d3.max(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x)))
                 }];
 
-                // Create bivariate colormap by using d3.cross (a Cartesian product), then taking those values and using `cuts` to display it as we want
+                // Create bivariate colormap by using `d3.cross` (a Cartesian product), then taking those values and using `cuts` to display it as we want
                 desert_legend_g.selectAll("text").remove();
                 desert_legend_g.selectAll("rect")
                                 .data(d3.cross(d3.range(3), d3.range(3)))
@@ -551,10 +559,10 @@
                 // ---Create all the scatter plots---
                 n = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
                 // Find the domains based on the scatter data
-                scatter1_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !!x)));
-                scatter1_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
-                scatter2_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !!x)));
-                scatter2_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
+                scatter1_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !isNaN(x))));
+                scatter1_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !isNaN(x))));
+                scatter2_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !isNaN(x))));
+                scatter2_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !isNaN(x))));
                 // Add the axes
                 scatter1_xAxis.call(d3.axisBottom(scatter1_x));
                 scatter1_yAxis.call(d3.axisLeft(scatter1_y));
@@ -572,7 +580,7 @@
                           .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[k])) || isNaN(parseFloat(dd.properties[n])))))  // Get rid of bad data
                           .enter()
                           .append("circle")
-                          .attr("cx", function (dd) { return scatter1_x(parseFloat(dd.properties[k])); } )
+                          .attr("cx", function (dd) { let new_x = scatter1_x(parseFloat(dd.properties[k])); if (new_x < 0){ console.log(new_x); console.log(dd.properties[k]); }; return new_x} )
                           .attr("cy", function (dd) { return scatter1_y(parseFloat(dd.properties[n])); } )
                           .attr("r", 1.5)
                           .attr("census_id", dd => dd.properties['id'])
@@ -709,30 +717,30 @@
                         .attr("x", width/2)
                         .attr("y", function(){ return scatter_height; })
                         .style("font-family", "sans-serif")
-                        .style("font-size", 15)
+                        .style("font-size", "15px")
                         .attr("class", "scatter1_texts");
                 scatter1.append("text")
                         .text(document.getElementById("dropdown-label1").innerHTML)
-                        .attr("x", function(){ return -scatter_height/2; })
+                        .attr("x", function(){ return -scatter_height/2 + 20*(6-document.getElementById("dropdown-label1").innerHTML.length)/5.5; })
                         .attr("y", function(){ return margin.left-7; })
                         .attr("transform", "rotate(-90)")
                         .style("font-family", "sans-serif")
-                        .style("font-size", 15)
+                        .style("font-size", "15px")
                         .attr("class", "scatter1_texts");
                 scatter2.append("text")
                         .text(document.getElementById("dropdown-label3").innerHTML)
                         .attr("x", width/2)
                         .attr("y", function(){ return scatter_height; })
                         .style("font-family", "sans-serif")
-                        .style("font-size", 15)
+                        .style("font-size", "15px")
                         .attr("class", "scatter2_texts");
                 scatter2.append("text")
                         .text(document.getElementById("dropdown-label1").innerHTML)
-                        .attr("x", function(){ return -scatter_height/2; })
+                        .attr("x", function(){ return -scatter_height/2 + 20*(6-document.getElementById("dropdown-label1").innerHTML.length)/5.5;; })
                         .attr("y", function(){ return margin.left-7; })
                         .attr("transform", "rotate(-90)")
                         .style("font-family", "sans-serif")
-                        .style("font-size", 15)
+                        .style("font-size", "15px")
                         .attr("class", "scatter2_texts");
         } // Thus ends `createMap`
 

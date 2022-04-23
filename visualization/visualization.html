@@ -9,6 +9,7 @@
     <script type="text/javascript" src="../lib/d3-legend.min.js"></script>
     <script type="text/javascript" src="../lib/d3-tip.min.js"></script>
     <script type="text/javascript" src="../lib/topojson.v2.min.js"></script>
+    <script type="text/javascript" src="../lib/simple-statistics.min.js"></script>
     <link rel="stylesheet" href="visualization.css">
 
     <title>CSE6242 Team 141 Project</title>
@@ -28,7 +29,7 @@
       </div>
     </div>
     &nbsp;&nbsp;&nbsp;&nbsp;
-    <span class="factor-response">Desert 1:</span> <div class="selector">
+    <span class="factor-response">Desert:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label2">Food</span>
         <div class="dropdown-options" id="dropdown2">
             <span onclick="updateDesert('Food')">Food</span>
@@ -40,8 +41,8 @@
       </div>
     </div>
     &nbsp;&nbsp;&nbsp;&nbsp;
-    <span class="factor-response">Desert 2:</span> <div class="selector">
-        <div class="dropdown-button"><span id="dropdown-label3">Physical activity</span>
+    <span class="factor-response" style="display: none">Desert 2:</span> <div class="selector" style="display: none">
+        <div class="dropdown-button"><span id="dropdown-label3">Poverty Rate</span>
         <div class="dropdown-options" id="dropdown3">
             <span onclick="updateDesert2('Food')">Food</span>
             <span onclick="updateDesert2('Physical activity')">Physical activity</span>
@@ -72,6 +73,8 @@
     <br>
     <svg id="scatter1" style="z-index: 1"></svg>
     <svg id="scatter2" style="z-index: 1"></svg>
+    <br>
+    <div style="position: absolute; left: 25%; font-family: sans-serif; font-size: 13px;" id="param-vals"></div>
     <script>
         const parameters = ['Arthritis', 'Asthma', 'Binge drinking', 'COPD', 'Cancer', 'Cervical cancer screenings', 'Cholesterol screenings', 'Chronic kidney disease',
                             'Colon cancer screenings', 'Core men\'s health', "Core women's health", 'Coronary heart disease', 'Dental checkups', 'Depression', 'Diabetes',
@@ -84,15 +87,15 @@
             a.setAttribute("onClick", "updateResponse(\"" + element + "\")")
             document.getElementById('dropdown1').appendChild(a);
         });
-        const parameter_mapping = {"access2": "Health insurance access", "arthritis": "Arthritis", "binge": "Binge drinking",
-                                    "bphigh": "High blood pressure", "bpmed": "Medium blood pressure", "cancer": "Cancer",
-                                    "casthma": "Asthma", "cervical": "Cervical cancer screenings", "chd": "Coronary heart disease",
+        const parameter_mapping = {"access2": "Health insurance access", "arthritis": "Arthritis prevalence", "binge": "Binge drinking prevalence",
+                                    "bphigh": "High blood pressure prevalence", "bpmed": "Medium blood pressure prevalence", "cancer": "Cancer prevalence",
+                                    "casthma": "Asthma prevalence", "cervical": "Cervical cancer screenings", "chd": "Coronary heart disease prevalence",
                                     "checkup": "Routine checkups", "cholscreen": "Cholesterol screenings", "colon_screen": "Colon cancer screenings",
-                                    "copd": "COPD", "corem": "Core men\"s health", "corew": "Core women's health", "csmoking": "Smoking",
-                                    "dental": "Dental checkups", "depression": "Depression", "diabetes": "Diabetes", "ghlth": "General poor health",
-                                    "highchol": "High cholesterol", "kidney": "Chronic kidney disease", "lpa": "No physical activity", "mammouse": "Mammograms",
-                                    "mhlth": "Poor mental health", "obesity": "Obesity", "phlth": "Poor physical health", "sleep": "Poor sleep",
-                                    "stroke": "Stroke", "teethlost": "Teeth loss"}
+                                    "copd": "COPD prevalence", "corem": "Core men\"s health", "corew": "Core women's health", "csmoking": "Smoking prevalence",
+                                    "dental": "Dental checkups", "depression": "Depression prevalence", "diabetes": "Diabetes prevalence", "ghlth": "General poor health prevalence",
+                                    "highchol": "High cholesterol prevalence", "kidney": "Chronic kidney disease prevalence", "lpa": "No physical activity", "mammouse": "Mammograms",
+                                    "mhlth": "Poor mental health prevalence", "obesity": "Obesity prevalence", "phlth": "Poor physical health", "sleep": "Poor sleep prevalence",
+                                    "stroke": "Stroke prevalence", "teethlost": "Teeth loss prevalence"}
         const parameter_mapping_r = {'Health insurance access': 'access2', 'Arthritis': 'arthritis', 'Binge drinking': 'binge', 'High blood pressure': 'bphigh',
                                     'Medium blood pressure': 'bpmed', 'Cancer': 'cancer', 'Asthma': 'casthma', 'Cervical cancer screenings': 'cervical',
                                     'Coronary heart disease': 'chd', 'Routine checkups': 'checkup', 'Cholesterol screenings': 'cholscreen',
@@ -102,7 +105,8 @@
                                     'Mammograms': 'mammouse', 'Poor mental health': 'mhlth', 'Obesity': 'obesity', 'Poor physical health': 'phlth',
                                     'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'}
         const factor_mapping_r = {'Food': 'food_closest_travel_times', 'Physical activity': 'physical_closest_dist', 'Public transport': 'transport_closest_dist',
-                                  'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times'}
+                                  'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times', 'Poverty Rate': 'PovertyRate',
+                                  'Median Income': 'MedianFamilyIncome'}
         var current_tract = "tracts_";
         var current_city = "New_York";
 
@@ -124,12 +128,14 @@
         function changeTract(){
             if (current_tract == "tracts_"){
                 current_tract = "ZCTA_";
+                document.getElementById("dropdown-label3").innerHTML = "Median Income";
                 document.getElementById("zip-label").style = "color: black";
                 document.getElementById("tract-label").style = "color: lightgray";
                 document.getElementById("zip-tract-checkbox").checked = true;
             }
             else{
                 current_tract = "tracts_";
+                document.getElementById("dropdown-label3").innerHTML = "Poverty Rate";
                 document.getElementById("zip-label").style = "color: lightgray";
                 document.getElementById("tract-label").style = "color: black";
                 document.getElementById("zip-tract-checkbox").checked = false;
@@ -169,7 +175,7 @@
                          .attr("width", width)
                          .attr("height", scatter_height);
         var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
-        var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + x_axis_position + ")");
+        var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + (x_axis_position) + ")");
         var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
 
         // Prepare the color scales
@@ -194,64 +200,75 @@
         var tip = d3.tip()
                     .attr('id', 'tooltip')
                     .style("opacity", "50%")
-                    .html(function(d){
+                    .html(function(dd){
                         k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
                         m = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
                         n = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                         var suffix_1 = ((document.getElementById("dropdown-label2").innerHTML == "Physical activity") || (document.getElementById("dropdown-label2").innerHTML == "Public transport")) ? " distance" : " travel time";
                         var units_1 = (suffix_1 == " distance") ? " km" : " s";
-                        var suffix_2 = ((document.getElementById("dropdown-label3").innerHTML == "Physical activity") || (document.getElementById("dropdown-label3").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_2 = (suffix_2 == " distance") ? " km" : " s";
-                        if (d.properties[k] == null){
-                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
+                        var units_2 = (document.getElementById("dropdown-label3").innerHTML == "Poverty Rate") ? "%" : " dollars";
+                        if (dd.properties[k] == null){
+                            return "<b>Census tract</b>: " + dd.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + parseFloat(dd.properties[m]).toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + "</b>: " + parseFloat(dd.properties[n]).toFixed(2) + units_2;
                         }
                         else{
-                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: " + d.properties[k] + "%<br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
+                            return "<b>Census tract</b>: " + dd.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: " + dd.properties[k] + "%<br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + parseFloat(dd.properties[m]).toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + "</b>: " + parseFloat(dd.properties[n]).toFixed(2) + units_2;
                         }
-                        return d.properties[k];
+                        return dd.properties[k];
                     });
         
         var desert_tip = d3.tip()
                     .attr('id', 'tooltip')
                     .style("opacity", "50%")
-                    .html(function(d){
+                    .html(function(dd){
                         k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
                         m = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
                         n = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                         var suffix_1 = ((document.getElementById("dropdown-label2").innerHTML == "Physical activity") || (document.getElementById("dropdown-label2").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_1 = (suffix_1 == " distance") ? " km" : " s"
-                        var suffix_2 = ((document.getElementById("dropdown-label3").innerHTML == "Physical activity") || (document.getElementById("dropdown-label3").innerHTML == "Public transport")) ? " distance" : " travel time";
-                        var units_2 = (suffix_2 == " distance") ? " km" : " s"
-                        if (d.properties[k] == null){
-                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
+                        var units_1 = (suffix_1 == " distance") ? " km" : " s";
+                        var units_2 = (document.getElementById("dropdown-label3").innerHTML == "Poverty Rate") ? "%" : " dollars";
+                        if (dd.properties[k] == null){
+                            return "<b>Census tract</b>: " + dd.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: <i>Unknown</i><br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + parseFloat(dd.properties[m]).toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + "</b>: " + parseFloat(dd.properties[n]).toFixed(2) + units_2;
                         }
                         else{
-                            return "<b>Census tract</b>: " + d.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: " + d.properties[k] + "%<br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + d.properties[m].toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + suffix_2 + "</b>: " + d.properties[n].toFixed(2) + units_2;
+                            return "<b>Census tract</b>: " + dd.properties["id"] + "<br><b>" + document.getElementById("dropdown-label1").innerHTML + "</b>: " + dd.properties[k] + "%<br><b>" + document.getElementById("dropdown-label2").innerHTML + suffix_1 + "</b>: " + parseFloat(dd.properties[m]).toFixed(2) + units_1 + "<br><b>" + document.getElementById("dropdown-label3").innerHTML + "</b>: " + parseFloat(dd.properties[n]).toFixed(2) + units_2;
                         }
-                        return d.properties[k];
+                        return dd.properties[k];
                     });
         
         // Get the projections ready
         var projection = d3.geoAlbersUsa();
         var path = d3.geoPath(projection);
         var data = undefined;
+        var vals = [0, 0, 0, 0, 0];
 
         function updateCity(city){
             // Load the data
             current_city = city;
-            document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ")
-            d3.json(current_tract + city + ".json").then(function(d){
-                    projection.fitExtent([[0, 0], [width, height]], d);
-                    data = d;
-                    createMap(d);
-                }
-            );
+            document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ");
+            d3.csv(current_tract + city + "_result.csv").then(function(d){
+                let key = parameter_mapping[parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML]];
+                vals = [0, 0, 0, 0, 0];
+                d.forEach(function(row){
+                    if (row['Health condition'] == key){
+                        console.log('found!')
+                        vals = [parseFloat(row['Food']), parseFloat(row['Physical health']), parseFloat(row['Public transport']), parseFloat(row['Education']), parseFloat(row['Houses of worship']), parseFloat(row['Poverty Rate'])];
+                    }
+                });
+                document.getElementById("param-vals").innerHTML = "<b>Parameters</b>: Food: " + vals[0].toFixed(3) + ",  Physical activity: " + vals[1].toFixed(3) + ",  Public transport: " + vals[2].toFixed(3) + ",  Education: " + vals[3].toFixed(3) + ",  Houses of worship: " + vals[4].toFixed(3) + ",  Income: " + vals[5].toFixed(3);
+            }).then(
+                d3.json(current_tract + city + ".json").then(function(d){
+                        projection.fitExtent([[0, 0], [width, height]], d);
+                        data = d;
+                        createMap(d);
+                    }
+                ));
         }
 
         function createMap(d){
             // Create the map
             d3.selectAll(".mapPath").remove();
             k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
+            response_k = k;
             colorScale.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
             i = 0;
             var legend = d3.legendColor()
@@ -344,11 +361,14 @@
                 factor_k = k;
                 m = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                 factor_m = m;
-                desert_colorScale1.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.9)]);
-                desert_colorScale2.domain([d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.9)]);
+                desert_colorScale1.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
+                desert_colorScale2.domain([d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
                 deserts.call(desert_tip);
-                cuts1 = [d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.5), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b), 0.9)]
-                cuts2 = [d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.5), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b), 0.9)]
+                cuts1 = [d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]
+                cuts2 = [d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.9)]
+                // See https://observablehq.com/@hydrosquall/simple-linear-regression-scatterplot-with-d3
+                linearRegression1 = ss.linearRegression(d['features'].map(dd => [dd.properties[k], dd.properties[response_k]]));
+                linearRegressionLine = ss.linearRegressionLine(linearRegression1);
                 // Create bivariate colormap
                 desert_legend_g.selectAll("text").remove();
                 desert_legend_g.selectAll("rect")
@@ -479,12 +499,28 @@
                                 .attr("transform", "rotate(-90)")
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.min(d['features'].map(dd => dd.properties[m])).toFixed(2))
+                                .text(function() {
+                                    let minimum = parseFloat(d3.min(d['features'].map(dd => dd.properties[m])));
+                                    if (minimum < 1000){
+                                        return minimum.toFixed(2);
+                                    }
+                                    else{
+                                        return (minimum/1000).toFixed(0) + 'K';
+                                    }
+                                })
                                 .attr("x", 8)
                                 .attr("y", 85)
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.max(d['features'].map(dd => dd.properties[m])).toFixed(2))
+                                .text(function() {
+                                    let maximum = parseFloat(d3.max(d['features'].map(dd => dd.properties[m])));
+                                    if (maximum < 1000){
+                                        return maximum.toFixed(2);
+                                    }
+                                    else{
+                                        return (maximum/1000).toFixed(0) + 'K';
+                                    }
+                                })
                                 .attr("x", 8)
                                 .attr("y", 23)
                                 .style("font-size", 12)
@@ -494,12 +530,12 @@
                                 .attr("y", 110)
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.min(d['features'].map(dd => dd.properties[k])).toFixed(2))
+                                .text(parseFloat(d3.min(d['features'].map(dd => dd.properties[k]).filter(x => !!x))).toFixed(2))
                                 .attr("x", 30)
                                 .attr("y", 95)
                                 .style("font-size", 12)
                 desert_legend_g.append("text")
-                                .text(d3.max(d['features'].map(dd => dd.properties[k])).toFixed(2))
+                                .text(parseFloat(d3.max(d['features'].map(dd => dd.properties[k]).filter(x => !!x))).toFixed(2))
                                 .attr("x", 90)
                                 .attr("y", 95)
                                 .style("font-size", 12)
@@ -573,10 +609,10 @@
                         });
                 
                 n = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
-                scatter1_x.domain(d3.extent(d['features'].map(dd => dd.properties[k])));
-                scatter1_y.domain(d3.extent(d['features'].map(dd => dd.properties[n])));
-                scatter2_x.domain(d3.extent(d['features'].map(dd => dd.properties[m])));
-                scatter2_y.domain(d3.extent(d['features'].map(dd => dd.properties[n])));
+                scatter1_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !!x)));
+                scatter1_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
+                scatter2_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !!x)));
+                scatter2_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
                 var x_move = scatter_height-25
                 scatter1_xAxis.call(d3.axisBottom(scatter1_x));
                 scatter1_yAxis.call(d3.axisLeft(scatter1_y));
@@ -587,11 +623,11 @@
                 d3.selectAll(".scatter2_dots").remove();
                 d3.selectAll(".scatter2_texts").remove();
                 scatter1_g.selectAll("dot")
-                          .data(d.features)
+                          .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[k])) || isNaN(parseFloat(dd.properties[n])))))
                           .enter()
                           .append("circle")
-                          .attr("cx", function (dd) { return scatter1_x(dd.properties[k]); } )
-                          .attr("cy", function (dd) { return scatter1_y(dd.properties[n]); } )
+                          .attr("cx", function (dd) { return scatter1_x(parseFloat(dd.properties[k])); } )
+                          .attr("cy", function (dd) { return scatter1_y(parseFloat(dd.properties[n])); } )
                           .attr("r", 1.5)
                           .attr("census_id", dd => dd.properties['id'])
                           .style("fill", "#000000")
@@ -643,11 +679,11 @@
                             }
                           });
                 scatter2_g.selectAll("dot")
-                          .data(d.features)
+                          .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[m])) || isNaN(parseFloat(dd.properties[n])))))
                           .enter()
                           .append("circle")
-                          .attr("cx", function (dd) { return scatter2_x(dd.properties[m]); } )
-                          .attr("cy", function (dd) { return scatter2_y(dd.properties[n]); } )
+                          .attr("cx", function (dd) { return scatter2_x(parseFloat(dd.properties[m])); } )
+                          .attr("cy", function (dd) { return scatter2_y(parseFloat(dd.properties[n])); } )
                           .attr("r", 1.5)
                           .attr("census_id", dd => dd.properties['id'])
                           .style("fill", "#000000")

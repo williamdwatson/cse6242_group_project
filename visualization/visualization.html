@@ -74,82 +74,15 @@
     <svg id="scatter1" style="z-index: 1"></svg>
     <svg id="scatter2" style="z-index: 1"></svg>
     <br>
-    <div style="position: absolute; left: 25%; font-family: sans-serif; font-size: 13px;" id="param-vals"></div>
+    <div style="position: absolute; left: 20%; bottom: 1%; font-family: sans-serif; font-size: 13px;" id="param-vals"></div>
     <script>
-        const parameters = ['Arthritis', 'Asthma', 'Binge drinking', 'COPD', 'Cancer', 'Cervical cancer screenings', 'Cholesterol screenings', 'Chronic kidney disease',
-                            'Colon cancer screenings', 'Core men\'s health', "Core women's health", 'Coronary heart disease', 'Dental checkups', 'Depression', 'Diabetes',
-                            'General poor health', 'Health insurance access', 'High blood pressure', 'High cholesterol', 'Mammograms', 'Medium blood pressure',
-                            'No physical activity', 'Obesity', 'Poor mental health', 'Poor physical health', 'Poor sleep', 'Routine checkups', 'Smoking', 'Stroke',
-                            'Teeth loss']
-        parameters.forEach(element => {
-            var a = document.createElement("span");
-            a.innerHTML = element;
-            a.setAttribute("onClick", "updateResponse(\"" + element + "\")")
-            document.getElementById('dropdown1').appendChild(a);
-        });
-        const parameter_mapping = {"access2": "Health insurance access", "arthritis": "Arthritis prevalence", "binge": "Binge drinking prevalence",
-                                    "bphigh": "High blood pressure prevalence", "bpmed": "Medium blood pressure prevalence", "cancer": "Cancer prevalence",
-                                    "casthma": "Asthma prevalence", "cervical": "Cervical cancer screenings", "chd": "Coronary heart disease prevalence",
-                                    "checkup": "Routine checkups", "cholscreen": "Cholesterol screenings", "colon_screen": "Colon cancer screenings",
-                                    "copd": "COPD prevalence", "corem": "Core men\"s health", "corew": "Core women's health", "csmoking": "Smoking prevalence",
-                                    "dental": "Dental checkups", "depression": "Depression prevalence", "diabetes": "Diabetes prevalence", "ghlth": "General poor health prevalence",
-                                    "highchol": "High cholesterol prevalence", "kidney": "Chronic kidney disease prevalence", "lpa": "No physical activity", "mammouse": "Mammograms",
-                                    "mhlth": "Poor mental health prevalence", "obesity": "Obesity prevalence", "phlth": "Poor physical health", "sleep": "Poor sleep prevalence",
-                                    "stroke": "Stroke prevalence", "teethlost": "Teeth loss prevalence"}
-        const parameter_mapping_r = {'Health insurance access': 'access2', 'Arthritis': 'arthritis', 'Binge drinking': 'binge', 'High blood pressure': 'bphigh',
-                                    'Medium blood pressure': 'bpmed', 'Cancer': 'cancer', 'Asthma': 'casthma', 'Cervical cancer screenings': 'cervical',
-                                    'Coronary heart disease': 'chd', 'Routine checkups': 'checkup', 'Cholesterol screenings': 'cholscreen',
-                                    'Colon cancer screenings': 'colon_screen', 'COPD': 'copd', 'Core men"s health': 'corem', "Core women's health": 'corew',
-                                    'Smoking': 'csmoking', 'Dental checkups': 'dental', 'Depression': 'depression', 'Diabetes': 'diabetes',
-                                    'General poor health': 'ghlth', 'High cholesterol': 'highchol', 'Chronic kidney disease': 'kidney', 'No physical activity': 'lpa',
-                                    'Mammograms': 'mammouse', 'Poor mental health': 'mhlth', 'Obesity': 'obesity', 'Poor physical health': 'phlth',
-                                    'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'}
-        const factor_mapping_r = {'Food': 'food_closest_travel_times', 'Physical activity': 'physical_closest_dist', 'Public transport': 'transport_closest_dist',
-                                  'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times', 'Poverty Rate': 'PovertyRate',
-                                  'Median Income': 'MedianFamilyIncome'}
-        var current_tract = "tracts_";
-        var current_city = "New_York";
-
-        function updateResponse(resp){
-            document.getElementById("dropdown-label1").innerHTML = resp;
-            createMap(data);
-        }
-
-        function updateDesert(desert){
-            document.getElementById("dropdown-label2").innerHTML = desert;
-            createMap(data);
-        }
-
-        function updateDesert2(desert){
-            document.getElementById("dropdown-label3").innerHTML = desert;
-            createMap(data);
-        }
-        
-        function changeTract(){
-            if (current_tract == "tracts_"){
-                current_tract = "ZCTA_";
-                document.getElementById("dropdown-label3").innerHTML = "Median Income";
-                document.getElementById("zip-label").style = "color: black";
-                document.getElementById("tract-label").style = "color: lightgray";
-                document.getElementById("zip-tract-checkbox").checked = true;
-            }
-            else{
-                current_tract = "tracts_";
-                document.getElementById("dropdown-label3").innerHTML = "Poverty Rate";
-                document.getElementById("zip-label").style = "color: lightgray";
-                document.getElementById("tract-label").style = "color: black";
-                document.getElementById("zip-tract-checkbox").checked = false;
-            }
-            updateCity(current_city);
-        }
-
+        // ---Set up the SVG and positioning---
         // See https://bl.ocks.org/gordlea/27370d1eea8464b04538e6d8ced39e89
         var margin = {top: 20, right: 20, bottom: 70, left: 20}
             , width = window.innerWidth/2 - margin.left - margin.right      // Use the window's width
             , height = window.innerHeight/1.4 - margin.top - margin.bottom  // Use the window's height
             , scatter_height = window.innerHeight - (window.innerHeight/1.4) + margin.top/2;
         
-        // Set up the SVG
         var svg = d3.select("#choropleth")
                     .attr("width", width)
                     .attr("height", height)
@@ -177,6 +110,50 @@
         var scatter2_g = scatter2.append("g").attr("id", "scatter2_g").attr("transform", "translate(" + scatter_position_x + ","  + (scatter_position_y-27) + ")");
         var scatter2_xAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + "," + (x_axis_position) + ")");
         var scatter2_yAxis = scatter2.append("g").attr("transform", "translate(" + scatter_position_x + ","  + scatter_position_y + ")");
+
+        // Convenient mappings to and from different names (i.e. the nice ones and ones that are actually in the data)
+        const parameters = ['Arthritis', 'Asthma', 'Binge drinking', 'COPD', 'Cancer', 'Cervical cancer screenings', 'Cholesterol screenings', 'Chronic kidney disease',
+                            'Colon cancer screenings', 'Core men\'s health', "Core women's health", 'Coronary heart disease', 'Dental checkups', 'Depression', 'Diabetes',
+                            'General poor health', 'Health insurance access', 'High blood pressure', 'High cholesterol', 'Mammograms', 'Medium blood pressure',
+                            'No physical activity', 'Obesity', 'Poor mental health', 'Poor physical health', 'Poor sleep', 'Routine checkups', 'Smoking', 'Stroke',
+                            'Teeth loss'];
+        const parameter_mapping = {"access2": "Health insurance access", "arthritis": "Arthritis prevalence", "binge": "Binge drinking prevalence",
+                                    "bphigh": "High blood pressure prevalence", "bpmed": "Medium blood pressure prevalence", "cancer": "Cancer prevalence",
+                                    "casthma": "Asthma prevalence", "cervical": "Cervical cancer screenings", "chd": "Coronary heart disease prevalence",
+                                    "checkup": "Routine checkups", "cholscreen": "Cholesterol screenings", "colon_screen": "Colon cancer screenings",
+                                    "copd": "COPD prevalence", "corem": "Core men\"s health", "corew": "Core women's health", "csmoking": "Smoking prevalence",
+                                    "dental": "Dental checkups", "depression": "Depression prevalence", "diabetes": "Diabetes prevalence", "ghlth": "General poor health prevalence",
+                                    "highchol": "High cholesterol prevalence", "kidney": "Chronic kidney disease prevalence", "lpa": "No physical activity", "mammouse": "Mammograms",
+                                    "mhlth": "Poor mental health prevalence", "obesity": "Obesity prevalence", "phlth": "Poor physical health", "sleep": "Poor sleep prevalence",
+                                    "stroke": "Stroke prevalence", "teethlost": "Teeth loss prevalence"};
+        const parameter_mapping_r = {'Health insurance access': 'access2', 'Arthritis': 'arthritis', 'Binge drinking': 'binge', 'High blood pressure': 'bphigh',
+                                    'Medium blood pressure': 'bpmed', 'Cancer': 'cancer', 'Asthma': 'casthma', 'Cervical cancer screenings': 'cervical',
+                                    'Coronary heart disease': 'chd', 'Routine checkups': 'checkup', 'Cholesterol screenings': 'cholscreen',
+                                    'Colon cancer screenings': 'colon_screen', 'COPD': 'copd', 'Core men"s health': 'corem', "Core women's health": 'corew',
+                                    'Smoking': 'csmoking', 'Dental checkups': 'dental', 'Depression': 'depression', 'Diabetes': 'diabetes',
+                                    'General poor health': 'ghlth', 'High cholesterol': 'highchol', 'Chronic kidney disease': 'kidney', 'No physical activity': 'lpa',
+                                    'Mammograms': 'mammouse', 'Poor mental health': 'mhlth', 'Obesity': 'obesity', 'Poor physical health': 'phlth',
+                                    'Poor sleep': 'sleep', 'Stroke': 'stroke', 'Teeth loss': 'teethlost'};
+        const factor_mapping_r = {'Food': 'food_closest_travel_times', 'Physical activity': 'physical_closest_dist', 'Public transport': 'transport_closest_dist',
+                                  'Education': 'education_closest_travel_times', 'House of worship': 'worship_closest_travel_times', 'Poverty Rate': 'PovertyRate',
+                                  'Median Income': 'MedianFamilyIncome'};
+        
+        // Various "global" variables that are used across different functions
+        var current_tract = "tracts_";
+        var current_city = "New_York";
+        var data = undefined;
+        var factor_k = undefined;
+        var response_k = undefined;
+        var factor_m = undefined;
+        var vals = [0, 0, 0, 0, 0];
+
+        // Set the dropdown to have one entry for each item in the health list
+        parameters.forEach(element => {
+            var a = document.createElement("span");
+            a.innerHTML = element;
+            a.setAttribute("onClick", "updateResponse(\"" + element + "\")")
+            document.getElementById('dropdown1').appendChild(a);
+        });
 
         // Prepare the color scales
         var colorScale = d3.scaleSequential(d3.interpolateReds);
@@ -238,24 +215,61 @@
         // Get the projections ready
         var projection = d3.geoAlbersUsa();
         var path = d3.geoPath(projection);
-        var data = undefined;
-        var vals = [0, 0, 0, 0, 0];
 
+        // Callback when the response dropdown is changed
+        function updateResponse(resp){
+            document.getElementById("dropdown-label1").innerHTML = resp;
+            createMap(data);
+        }
+
+        // Callback when the desert drpdown is changed
+        function updateDesert(desert){
+            document.getElementById("dropdown-label2").innerHTML = desert;
+            createMap(data);
+        }
+
+        // Vestigial callback from when there were two desert dropdowns
+        function updateDesert2(desert){
+            document.getElementById("dropdown-label3").innerHTML = desert;
+            createMap(data);
+        }
+        
+        // Callback when the type of the plot is changed (i.e. from census tracts to ZCTAs)
+        function changeTract(){
+            if (current_tract == "tracts_"){
+                current_tract = "ZCTA_";
+                document.getElementById("dropdown-label3").innerHTML = "Median Income";
+                document.getElementById("zip-label").style = "color: black";
+                document.getElementById("tract-label").style = "color: lightgray";
+                document.getElementById("zip-tract-checkbox").checked = true;
+            }
+            else{
+                current_tract = "tracts_";
+                document.getElementById("dropdown-label3").innerHTML = "Poverty Rate";
+                document.getElementById("zip-label").style = "color: lightgray";
+                document.getElementById("tract-label").style = "color: black";
+                document.getElementById("zip-tract-checkbox").checked = false;
+            }
+            updateCity(current_city);
+        }
+
+        // Callback when the city is changed; generally reloads all the data
         function updateCity(city){
-            // Load the data
+            // Set the dropdown and variables as expected
             current_city = city;
             document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ");
+            // Load in the results CSV and display the LASSO coefficients
             d3.csv(current_tract + city + "_result.csv").then(function(d){
                 let key = parameter_mapping[parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML]];
                 vals = [0, 0, 0, 0, 0];
                 d.forEach(function(row){
                     if (row['Health condition'] == key){
-                        console.log('found!')
-                        vals = [parseFloat(row['Food']), parseFloat(row['Physical health']), parseFloat(row['Public transport']), parseFloat(row['Education']), parseFloat(row['Houses of worship']), parseFloat(row['Poverty Rate'])];
+                        vals = [parseFloat(row['Food']), parseFloat(row['Physical health']), parseFloat(row['Public transport']), parseFloat(row['Education']), parseFloat(row['Houses of worship']), parseFloat(row[(current_tract == "tracts_") ? 'Poverty Rate' : 'Household Median Income'])];
                     }
                 });
-                document.getElementById("param-vals").innerHTML = "<b>Parameters</b>: Food: " + vals[0].toFixed(3) + ",  Physical activity: " + vals[1].toFixed(3) + ",  Public transport: " + vals[2].toFixed(3) + ",  Education: " + vals[3].toFixed(3) + ",  Houses of worship: " + vals[4].toFixed(3) + ",  Income: " + vals[5].toFixed(3);
+                document.getElementById("param-vals").innerHTML = "<b>LASSO coefficients</b>: Food: " + vals[0].toFixed(3) + ",  Physical activity: " + vals[1].toFixed(3) + ",  Public transport: " + vals[2].toFixed(3) + ",  Education: " + vals[3].toFixed(3) + ",  Houses of worship: " + vals[4].toFixed(3) + ",  Income: " + vals[5].toFixed(3);
             }).then(
+                // After we load that one, then create the maps
                 d3.json(current_tract + city + ".json").then(function(d){
                         projection.fitExtent([[0, 0], [width, height]], d);
                         data = d;
@@ -264,13 +278,16 @@
                 ));
         }
 
+        // Create the map by drawing everything
         function createMap(d){
-            // Create the map
+            // First remove the old maps
             d3.selectAll(".mapPath").remove();
             k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
             response_k = k;
-            colorScale.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
+            // Remap the color scale
+            colorScale.domain([d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
             i = 0;
+            // Prep the legend based on the new new color scale, with some tweaks as to the displayed labels
             var legend = d3.legendColor()
                                         .scale(colorScale)
                                         .ascending(false)
@@ -286,21 +303,23 @@
                                                 return dd.generatedLabels[i++] + "%";
                                             }
                                         });
+            // Add the legend and tooltip
             legend_g.call(legend);
             tracts.call(tip);
+            // Add the map
             tracts.selectAll("path")
                 .data(d.features)
                 .enter()
                 .append("path")
                 .attr("d", path)
                 .attr("class", "mapPath")
-                .attr("census_id", dd => dd.properties['id'])
+                .attr("census_id", dd => dd.properties['id'])   // Allows us to find it so we can link the highlights between different plots
                 .style("fill", function(dd){
                     if (dd.properties[k] == null){
                         return "gray";
                     }
                     else{
-                        return colorScale(dd.properties[k]);
+                        return colorScale(parseFloat(dd.properties[k]));
                     }
                 })
                 .on('mousemove', function(dd){
@@ -309,9 +328,12 @@
                     .style('left', d3.event.pageX - 100 + 'px');
                 })
                 .on('mouseover', function(dd, i){
+                    // Display the tooltop on mouseover
                     tip.show(dd, i);
                     tip.style("background", "rgba(75, 75, 75, 0.8)");
+                    // Set the style of the hovered element
                     d3.select(d3.event.target).style("stroke", "black").style("stroke-width", 3);
+                    // Now loop through the other plots and find those that have the same census tract/ZCTA id and highlight them
                     let census_id = this.getAttribute("census_id");
                     for (let x of document.getElementById("desert_tracts").children){
                         if (x.getAttribute("census_id") == census_id){
@@ -333,8 +355,10 @@
                     }
                 })
                 .on('mouseout', function(){
+                    // Reset the tooltip and style
                     tip.hide();
                     d3.select(d3.event.target).style("stroke", "none");
+                    // Reset all the plots that had the same tract/ZCTA
                     let census_id = this.getAttribute("census_id");
                     for (let x of document.getElementById("desert_tracts").children){
                         if (x.getAttribute("census_id") == census_id){
@@ -356,20 +380,44 @@
                     }
                 });
             
-                // Factor code
+                // ---Factor (i.e. desert) code---
                 k = factor_mapping_r[document.getElementById("dropdown-label2").innerHTML];
+                // Need these different variables (factor_k and k) because of how the variables are bound, and I had already written the code like this and I'd probably miss some if I went back to change it
                 factor_k = k;
                 m = factor_mapping_r[document.getElementById("dropdown-label3").innerHTML];
                 factor_m = m;
-                desert_colorScale1.domain([d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
-                desert_colorScale2.domain([d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
+                // Create the new color scales based on the extent of the data (actually the 10th and 90th percentiles to avoid outliers)
+                desert_colorScale1.domain([d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
+                desert_colorScale2.domain([d3.quantile(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x), 0.9)]);
                 deserts.call(desert_tip);
-                cuts1 = [d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => dd.properties[k]).sort((a, b) => a - b).filter(x => !!x), 0.9)]
-                cuts2 = [d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => dd.properties[m]).sort((a, b) => a - b).filter(x => !!x), 0.9)]
+                // Find where the colormap's mid and end points are for creating a legend
+                cuts1 = [d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x), 0.9)]
+                cuts2 = [d3.quantile(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x), 0.1), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x), 0.5), d3.quantile(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x), 0.9)]
+                // Do a basic linear regression to generally visualize the results (the LASSO is based on the transformed data, which would be too complicated to do here)
                 // See https://observablehq.com/@hydrosquall/simple-linear-regression-scatterplot-with-d3
-                linearRegression1 = ss.linearRegression(d['features'].map(dd => [dd.properties[k], dd.properties[response_k]]));
-                linearRegressionLine = ss.linearRegressionLine(linearRegression1);
-                // Create bivariate colormap
+                regression1 = ss.linearRegression(d['features'].map(dd => [parseFloat(dd.properties[k]), parseFloat(dd.properties[response_k])]).filter(x => !(isNaN(x[0]) || isNaN(x[1]))));
+                regression_line1 = ss.linearRegressionLine(regression1);
+                points_for_regression1 = [{
+                    x: d3.min(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x)),
+                    y: regression_line1(d3.min(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x))),
+                },
+                {
+                    x: d3.max(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x)),
+                    y: regression_line1(d3.max(d['features'].map(dd => parseFloat(dd.properties[k])).sort((a, b) => a - b).filter(x => !!x)))
+                }];
+                // Now for income/poverty
+                regression2 = ss.linearRegression(d['features'].map(dd => [parseFloat(dd.properties[m]), parseFloat(dd.properties[response_k])]).filter(x => !(isNaN(x[0]) || isNaN(x[1]))));
+                regression_line2 = ss.linearRegressionLine(regression2);
+                points_for_regression2 = [{
+                    x: d3.min(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x)),
+                    y: regression_line2(d3.min(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x))),
+                },
+                {
+                    x: d3.max(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x)),
+                    y: regression_line2(d3.max(d['features'].map(dd => parseFloat(dd.properties[m])).sort((a, b) => a - b).filter(x => !!x)))
+                }];
+
+                // Create bivariate colormap by using d3.cross (a Cartesian product), then taking those values and using `cuts` to display it as we want
                 desert_legend_g.selectAll("text").remove();
                 desert_legend_g.selectAll("rect")
                                 .data(d3.cross(d3.range(3), d3.range(3)))
@@ -380,127 +428,16 @@
                                 .attr("width", 23)
                                 .attr("height", 23)
                                 .attr("fill", dd => d3.interpolate(desert_colorScale1(cuts1[dd[0]]), desert_colorScale2(cuts2[dd[1]]))(0.5));
-                                /*.on("mouseover", function(dd){
-                                    let new_color = d3.color(this.getAttribute("fill"));
-                                    new_color.opacity = 0.5;
-                                    d3.select(this).attr("fill", new_color);
-                                    census_ids = [];
-                                    if ((dd[0] == 0) && (dd[1] == 0)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] <= cuts2[1])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 0) && (dd[1] == 1)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 0) && (dd[1] == 2)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] <= cuts1[1]) && (f.properties[factor_m] >= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 1) && (dd[1] == 0)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] <= cuts2[1])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 1) && (dd[1] == 1)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 1) && (dd[1] == 2)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[1]) && (f.properties[factor_k] <= cuts1[2]) && (f.properties[factor_m] >= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 2) && (dd[1] == 0)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] <= cuts2[1])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 2) && (dd[1] == 1)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] >= cuts2[1]) && (f.properties[factor_m] <= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    else if ((dd[0] == 2) && (dd[1] == 2)){
-                                        for (let f of data['features']){
-                                            if ((f.properties[factor_k] >= cuts1[2]) && (f.properties[factor_m] >= cuts2[2])){
-                                                census_ids.push(f.properties['id']);
-                                            }
-                                        }
-                                    }
-                                    census_ids.forEach(function(census_id){
-                                        for (let x of document.getElementById("tracts").children){
-                                            if (x.getAttribute("census_id") == census_id){
-                                                d3.select(x).style("stroke", "black").style("stroke-width", 3);
-                                                break;
-                                            }
-                                        }
-                                        for (let x of document.getElementById("desert_tracts").children){
-                                            if (x.getAttribute("census_id") == census_id){
-                                                d3.select(x).style("stroke", "black").style("stroke-width", 3);
-                                                break;
-                                            }
-                                        }
-                                        for (let x of document.getElementById("scatter1_g").children){
-                                            if (x.getAttribute("census_id") == census_id){
-                                                d3.select(x).attr("r", 4).style("fill", "red");
-                                                break;
-                                            }
-                                        }
-                                        for (let x of document.getElementById("scatter2_g").children){
-                                            if (x.getAttribute("census_id") == census_id){
-                                                d3.select(x).attr("r", 4).style("fill", "red");
-                                                break;
-                                            }
-                                        }
-                                    });
-                                })
-                                .on("mouseout", function(dd){
-                                    let new_color = d3.color(this.getAttribute("fill"));
-                                    new_color.opacity = 1;
-                                    d3.select(this).attr("fill", new_color);
-                                    for (let x of document.getElementById("tracts").children){
-                                        d3.select(x).style("stroke", "none");
-                                    }
-                                    for (let x of document.getElementById("desert_tracts").children){
-                                        d3.select(x).style("stroke", "none");
-                                    }
-                                    for (let x of document.getElementById("scatter1_g").children){
-                                        d3.select(x).attr("r", 1.5).style("fill", "black");
-                                    }
-                                    for (let x of document.getElementById("scatter2_g").children){
-                                        d3.select(x).attr("r", 1.5).style("fill", "black");
-                                    }
-                                });*/
+                // Add the legend and format its text labels appropriately
                 desert_legend_g.append("text")
                                 .text(document.getElementById("dropdown-label3").innerHTML)
                                 .attr("x", -90 + (document.getElementById("dropdown-label3").innerHTML == "Food" ? 25 : (document.getElementById("dropdown-label3").innerHTML == "Education") ? 10 : 0))
                                 .attr("y", 0)
                                 .attr("transform", "rotate(-90)")
-                                .style("font-size", 12)
+                                .style("font-size", 12);
                 desert_legend_g.append("text")
                                 .text(function() {
-                                    let minimum = parseFloat(d3.min(d['features'].map(dd => dd.properties[m])));
+                                    let minimum = parseFloat(d3.max(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !!x)));
                                     if (minimum < 1000){
                                         return minimum.toFixed(2);
                                     }
@@ -510,10 +447,10 @@
                                 })
                                 .attr("x", 8)
                                 .attr("y", 85)
-                                .style("font-size", 12)
+                                .style("font-size", 12);
                 desert_legend_g.append("text")
                                 .text(function() {
-                                    let maximum = parseFloat(d3.max(d['features'].map(dd => dd.properties[m])));
+                                    let maximum = parseFloat(d3.min(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !!x)));
                                     if (maximum < 1000){
                                         return maximum.toFixed(2);
                                     }
@@ -523,23 +460,24 @@
                                 })
                                 .attr("x", 8)
                                 .attr("y", 23)
-                                .style("font-size", 12)
+                                .style("font-size", 12);
                 desert_legend_g.append("text")
                                 .text(document.getElementById("dropdown-label2").innerHTML)
                                 .attr("x", 57 - (document.getElementById("dropdown-label2").innerHTML == "Food" ? 0 : (document.getElementById("dropdown-label2").innerHTML == "Education") ? 10 : 20))
                                 .attr("y", 110)
-                                .style("font-size", 12)
+                                .style("font-size", 12);
                 desert_legend_g.append("text")
-                                .text(parseFloat(d3.min(d['features'].map(dd => dd.properties[k]).filter(x => !!x))).toFixed(2))
+                                .text(parseFloat(d3.min(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !!x))).toFixed(2))
                                 .attr("x", 30)
                                 .attr("y", 95)
-                                .style("font-size", 12)
+                                .style("font-size", 12);
                 desert_legend_g.append("text")
-                                .text(parseFloat(d3.max(d['features'].map(dd => dd.properties[k]).filter(x => !!x))).toFixed(2))
+                                .text(parseFloat(d3.max(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !!x))).toFixed(2))
                                 .attr("x", 90)
                                 .attr("y", 95)
-                                .style("font-size", 12)
+                                .style("font-size", 12);
 
+                // Add the desert choropleth
                 desert_tracts.selectAll("path")
                        .data(d.features)
                        .enter()
@@ -552,7 +490,7 @@
                                 return "gray";
                             }
                             else{
-                                return d3.interpolate(desert_colorScale1(dd.properties[k]), desert_colorScale2(dd.properties[m]))(0.5);
+                                return d3.interpolate(desert_colorScale1(parseFloat(dd.properties[k])), desert_colorScale2(parseFloat(dd.properties[m])))(0.5);
                             }
                        })
                        .on('mousemove', function(dd){
@@ -561,6 +499,7 @@
                                       .style('left', d3.event.pageX - 100 + 'px');
                         })
                         .on('mouseover', function(dd, i){
+                            // Do the same thing as in the health response with regards to highlight all the other objects with the same `census_id`
                             desert_tip.show(dd, i);
                             desert_tip.style("background", "rgba(75, 75, 75, 0.8)");
                             d3.select(d3.event.target).style("stroke", "black").style("stroke-width", 3);
@@ -585,6 +524,7 @@
                             }
                         })
                         .on('mouseout', function(){
+                            // Same as in the health respone code
                             desert_tip.hide();
                             d3.select(d3.event.target).style("stroke", "none");
                             let census_id = this.getAttribute("census_id");
@@ -608,22 +548,28 @@
                             }
                         });
                 
+                // ---Create all the scatter plots---
                 n = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
+                // Find the domains based on the scatter data
                 scatter1_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[k])).filter(x => !!x)));
                 scatter1_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
                 scatter2_x.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[m])).filter(x => !!x)));
                 scatter2_y.domain(d3.extent(d['features'].map(dd => parseFloat(dd.properties[n])).filter(x => !!x)));
-                var x_move = scatter_height-25
+                // Add the axes
                 scatter1_xAxis.call(d3.axisBottom(scatter1_x));
                 scatter1_yAxis.call(d3.axisLeft(scatter1_y));
                 scatter2_xAxis.call(d3.axisBottom(scatter2_x));
                 scatter2_yAxis.call(d3.axisLeft(scatter2_y));
+                // Remove the old points, labels, and regression lines
                 d3.selectAll(".scatter1_dots").remove();
                 d3.selectAll(".scatter1_texts").remove();
+                d3.selectAll(".scatter1_lines").remove();
                 d3.selectAll(".scatter2_dots").remove();
                 d3.selectAll(".scatter2_texts").remove();
+                d3.selectAll(".scatter2_lines").remove();
+                // Add the first scatter
                 scatter1_g.selectAll("dot")
-                          .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[k])) || isNaN(parseFloat(dd.properties[n])))))
+                          .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[k])) || isNaN(parseFloat(dd.properties[n])))))  // Get rid of bad data
                           .enter()
                           .append("circle")
                           .attr("cx", function (dd) { return scatter1_x(parseFloat(dd.properties[k])); } )
@@ -633,6 +579,7 @@
                           .style("fill", "#000000")
                           .attr("class", "scatter1_dots")
                           .on("mouseover", function(dd){
+                            // As with the choropleth, highlight the related objects by `census_id`
                             let census_id = this.getAttribute("census_id");
                             this.setAttribute("r", 4);
                             d3.select(this).style("fill", "red");
@@ -656,6 +603,7 @@
                             }
                           })
                           .on("mouseout", function(dd){
+                            // As with the choropleth, unhighlight the related objects by `census_id`
                             let census_id = this.getAttribute("census_id");
                             this.setAttribute("r", 1.5);
                             d3.select(this).style("fill", "black");
@@ -678,6 +626,16 @@
                                 }
                             }
                           });
+                // Add the regression line
+                scatter1_line = d3.line()
+                                  .x(dd => scatter1_x(dd.x))
+                                  .y(dd => scatter1_y(dd.y));
+                scatter1_g.append('path')
+                          .datum(points_for_regression1)
+                          .attr("d", scatter1_line)
+                          .attr("class", "scatter1_lines")
+                          .style("stroke", "steelblue").style("stroke-width", 3).style("stroke-dasharray", "4 1");
+                // Now repeat everything from the second scatter plot
                 scatter2_g.selectAll("dot")
                           .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[m])) || isNaN(parseFloat(dd.properties[n])))))
                           .enter()
@@ -689,6 +647,7 @@
                           .style("fill", "#000000")
                           .attr("class", "scatter2_dots")
                           .on("mouseover", function(dd){
+                            // As with the choropleth, unhighlight the related objects by `census_id`
                             let census_id = this.getAttribute("census_id");
                             this.setAttribute("r", 4);
                             d3.select(this).style("fill", "red");
@@ -712,6 +671,7 @@
                             }
                           })
                           .on("mouseout", function(dd){
+                            // As with the choropleth, unhighlight the related objects by `census_id`
                             let census_id = this.getAttribute("census_id");
                             this.setAttribute("r", 1.5);
                             d3.select(this).style("fill", "black");
@@ -734,6 +694,16 @@
                                 }
                             }
                           });
+                // Add the income/poverty regression line
+                scatter2_line = d3.line()
+                                  .x(dd => scatter2_x(dd.x))
+                                  .y(dd => scatter2_y(dd.y));
+                scatter2_g.append('path')
+                          .datum(points_for_regression2)
+                          .attr("d", scatter2_line)
+                          .attr("class", "scatter2_lines")
+                          .style("stroke", "steelblue").style("stroke-width", 3).style("stroke-dasharray", "4 1");
+                // Add the axis labels
                 scatter1.append("text")
                         .text(document.getElementById("dropdown-label2").innerHTML)
                         .attr("x", width/2)
@@ -764,8 +734,9 @@
                         .style("font-family", "sans-serif")
                         .style("font-size", 15)
                         .attr("class", "scatter2_texts");
-            }
+        } // Thus ends `createMap`
 
+        // Add the ability to zoom and pan (linked for the choropleths)
         var zoom = d3.zoom()
             .scaleExtent([1, 8])
             .on('zoom', function() {
@@ -773,8 +744,11 @@
                 tracts.attr('transform', d3.event.transform);
         });
 
+        // Add the zoom and pan
         svg.call(zoom);
         deserts.call(zoom);
+
+        // Call the data loading and plotting for the default city
         updateCity("New_York");
     </script>
 </body>

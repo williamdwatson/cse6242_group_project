@@ -15,6 +15,39 @@
 
 </head>
 <body>
+    <div id="help-popup" style="visibility: hidden;">
+        <h1>Effects of Location and Deprivation Deserts on Human Health</h1>
+        <h4>CSE6242 Team 141 Final Project<br>Brinda Bhatt, Emily Micciche, Chaky Muankaew, Amy Warner, and William Watson</h4>
+        <span id="close-popup" onclick="closePopup()">X</span>
+        <p>
+            This project focused on analyzing the effects of deprivation deserts (areas with low access to food, physical activity, public transport, education and houses of worship)
+            on a variety of health outcomes in five cities (Atlanta, Cincinnati, Houston, New York, San Francisco, and Seattle).
+        </p>
+        <p>
+            Mapping data was collected from <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> and matched to speed data from <a href="https://movement.uber.com" target="_blank">UberMovement</a> as applicable.
+            A variety of features was pulled from the maps related to each of the deserts (for instance, supermakets for food deserts), and continuous access measures were then calculated.
+            Health outcome data was downloaded from the <a href="https://data.census.gov/" target="_blank">Census Bureau</a> and advanced regression analysis was performed to find the most important access factors for each health response.
+        </p>
+        <p>
+            The visualization consists of several key components:<br>
+            <img alt="Screenshot of the visualization" src="visualization_labelled.png" style="max-width: 50%; height: auto">
+            <ol style="position: absolute; top: 40%; left: 53%">
+                <li>Opens this popup</li>
+                <li>Choose the city to view the data for: Atlanta, Cincinnati, Houston, New York, San Francisco, and Seattle</li>
+                <li>Choose the access measure to display in the left choropleth: food, physical activity, public transport, education, or house-of-worship</li>
+                <li>Choose the health respone to display in the right choropleth</li>
+                <li>Bivariate choropleth of the selected city, with the parameters being the poverty rate and the selected access measure; hover to see more information</li>
+                <li>Univariate choropleth of the selected city, with the parameter being the selected health response; hover to see more information</li>
+                <li>Scatter plot of the selected access measure vs the selected health measure with a simple linear regression line to indicate general trend</li>
+                <li>Scatter plot of poverty rate vs the selected health measure with a simple linear regression line to indicate general trend</li>
+                <li>Variable importance as determined by our analysis, with sign indicating the direction of the relationship (i.e. negative for inverse)</li>
+            </ol>
+        </div>
+        </p>
+    </div>
+
+    <div class="help-button" onclick="openPopup()">About</div>
+    &nbsp;&nbsp;&nbsp;&nbsp;
     <span class="factor-response">City:</span> <div class="selector">
         <div class="dropdown-button"><span id="dropdown-label4">New York</span>
         <div class="dropdown-options" id="dropdown4">
@@ -61,7 +94,7 @@
         </div>
       </div>
     </div>
-    <!--
+    <!-- This was present when we were also using ZCTA areas rather than just census tracts
     &nbsp;&nbsp;&nbsp;&nbsp;
     <span class="switch-label" id="tract-label" onclick="changeTract()">Census tracts</span>
     <label class="switch">
@@ -78,7 +111,17 @@
     <svg id="scatter2" style="z-index: 1"></svg>
     <br>
     <div style="position: absolute; left: 20%; bottom: 1%; font-family: sans-serif; font-size: 13px;" id="param-vals"></div>
+
     <script>
+        // Display the help popup
+        function openPopup(){
+            document.getElementById("help-popup").style.visibility = "visible";
+        }
+        // Close the help popup
+        function closePopup(){
+            document.getElementById("help-popup").style.visibility = "hidden";
+        }
+
         // ---Set up the SVG and positioning---
         // See https://bl.ocks.org/gordlea/27370d1eea8464b04538e6d8ced39e89
         var margin = {top: 20, right: 20, bottom: 70, left: 20}
@@ -270,28 +313,32 @@
             // Set the dropdown and variables as expected
             current_city = city;
             document.getElementById("dropdown-label4").innerHTML = city.replace("_", " ");
-            // Load in the results CSV and display the LASSO coefficients
-            d3.csv(current_tract + city + "_result.csv").then(function(d){
-                let key = parameter_mapping[parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML]];
-                vals = [0, 0, 0, 0, 0];
-                d.forEach(function(row){
-                    if (row['Health condition'] == key){
-                        vals = [parseFloat(row['Food']), parseFloat(row['Physical health']), parseFloat(row['Public transport']), parseFloat(row['Education']), parseFloat(row['Houses of worship']), parseFloat(row[(current_tract == "tracts_") ? 'Poverty Rate' : 'Household Median Income'])];
-                    }
-                });
-                document.getElementById("param-vals").innerHTML = "<b>LASSO coefficients</b>: Food: " + vals[0].toFixed(3) + ",  Physical activity: " + vals[1].toFixed(3) + ",  Public transport: " + vals[2].toFixed(3) + ",  Education: " + vals[3].toFixed(3) + ",  Houses of worship: " + vals[4].toFixed(3) + ",  Income: " + vals[5].toFixed(3);
-            }).then(
-                // After we load that one, then create the maps
-                d3.json(current_tract + city + ".json").then(function(d){
-                        projection.fitExtent([[0, 0], [width, height]], d);
-                        data = d;
-                        createMap(d);
-                    }
-                ));
+            // After we load that one, then create the maps
+            d3.json(current_tract + city + ".json").then(function(d){
+                    projection.fitExtent([[0, 0], [width, height]], d);
+                    data = d;
+                    createMap(d);
+                }
+            );
         }
 
         // Create the map by drawing everything
         function createMap(d){
+            // Load in the results CSV and display the LASSO coefficients
+            d3.csv(current_tract + current_city + "_result.csv").then(function(dd){
+                let key = parameter_mapping[parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML]];
+                vals = [0, 0, 0, 0, 0];
+                dd.forEach(function(row){
+                    if (row['Health condition'] == key){
+                        vals = [parseFloat(row['Food']), parseFloat(row['Physical health']), parseFloat(row['Public transport']), parseFloat(row['Education']), parseFloat(row['Houses of worship']), parseFloat(row[(current_tract == "tracts_") ? 'Poverty Rate' : 'Household Median Income'])];
+                    }
+                });
+                document.getElementById("param-vals").innerHTML = "<b>Variable importance</b>: Food: " + vals[0].toFixed(3) + ",  Physical activity: " + vals[1].toFixed(3) + ",  Public transport: " + vals[2].toFixed(3) + ",  Education: " + vals[3].toFixed(3) + ",  Houses of worship: " + vals[4].toFixed(3) + ",  Income: " + vals[5].toFixed(3);
+            }).then(continueCreateMap(d));
+        }
+
+        // Called after the CSV has been loaded
+        function continueCreateMap(d){
             // First remove the old maps
             d3.selectAll(".mapPath").remove();
             k = parameter_mapping_r[document.getElementById("dropdown-label1").innerHTML].toUpperCase() + "_CrudePrev";
@@ -584,7 +631,7 @@
                           .data(d.features.filter(dd => !(isNaN(parseFloat(dd.properties[k])) || isNaN(parseFloat(dd.properties[n])))))  // Get rid of bad data
                           .enter()
                           .append("circle")
-                          .attr("cx", function (dd) { let new_x = scatter1_x(parseFloat(dd.properties[k])); if (new_x < 0){ console.log(new_x); console.log(dd.properties[k]); }; return new_x} )
+                          .attr("cx", function (dd) { return scatter1_x(parseFloat(dd.properties[k])); } )
                           .attr("cy", function (dd) { return scatter1_y(parseFloat(dd.properties[n])); } )
                           .attr("r", 1.5)
                           .attr("census_id", dd => dd.properties['id'])

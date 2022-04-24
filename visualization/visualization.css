@@ -9,12 +9,65 @@
     font-weight: bold;
 }
 
+.help-button {
+    display: inline-block;
+    background-color: steelblue;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    width: 200px;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.help-button:hover {
+    background-color: rgb(48, 90, 125);
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    width: 200px;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+#help-popup {
+    background-color: white;
+    position: absolute;
+    padding: 10px;
+    width: 90%;
+    height: 90%;
+    left: 3%;
+    top: 3%;
+    z-index: 2;
+    border: 2px solid rgb(48, 90, 125);
+    border-radius: 10px;
+    font-family: sans-serif;
+    word-wrap: break-word;
+}
+
+#close-popup{
+    top: 2%;
+    right: 2%;
+    color: rgb(125, 125, 125);
+    font-size: 25px;
+    font-weight: bold;
+    position: absolute;
+    cursor: pointer;
+}
+
+#close-popup:hover{
+    color: rgb(95, 95, 95);
+}
+
+/*Inspired by https://www.w3schools.com/css/css_dropdowns.asp*/
 .selector {
     display: inline-block;
 }
 
-
-/*Inspired by https://www.w3schools.com/css/css_dropdowns.asp*/
 .dropdown-button {
     background-color: steelblue;
     color: white;

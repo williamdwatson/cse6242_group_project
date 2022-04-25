@@ -1,0 +1,16 @@
+h5py == 2.10.0
+numpy == 1.21.6
+pandas == 1.2.3
+haversine == 2.5.1
+scikit-learn == 0.24.1
+tensorflow == 2.8.0
+distfit == 1.4.4
+matplotlib == 3.3.4
+seaborn == 0.11.1
+osmnx == 1.1.2
+networkx == 2.7.1
+shapefile == 2.2.0
+geopandas == 0.10.2
+tqdm == 4.63.1
+statsmodels == 0.12.2
+shapely == 1.8.0
